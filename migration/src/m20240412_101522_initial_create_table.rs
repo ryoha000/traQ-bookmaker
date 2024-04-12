@@ -22,6 +22,8 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+        // traq_id と channel_id に複合ユニーク制約を追加
+        manager.get_connection().execute_unprepared("ALTER TABLE user ADD CONSTRAINT unique_user_traq_id_channel_id UNIQUE (traq_id, channel_id)").await?;
 
         manager
             .create_table(
