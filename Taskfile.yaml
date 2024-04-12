@@ -31,6 +31,6 @@ tasks:
   ## generate code
   gen:entity:
     cmds: 
-      - sea-orm-cli generate entity -u  {{.DATABASE_URL}} -o kernel/src/model
+      - sea-orm-cli generate entity -u  {{.DATABASE_URL}} -o adapter/src/model
     vars:
       DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}/{{.NS_MARIADB_DATABASE}}
