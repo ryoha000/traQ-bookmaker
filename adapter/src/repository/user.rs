@@ -13,6 +13,8 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
         Entity::insert(ActiveModel {
             id: Set(user.id.value.to_string()),
             traq_id: Set(user.traq_id),
+            traq_display_id: Set(user.traq_display_id),
+            channel_id: Set(user.channel_id),
             balance: Set(user.balance),
         })
         .exec(&self.db.0)

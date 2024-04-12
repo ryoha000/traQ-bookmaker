@@ -8,6 +8,8 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub traq_id: String,
+    pub traq_display_id: String,
+    pub channel_id: String,
     pub balance: i32,
 }
 

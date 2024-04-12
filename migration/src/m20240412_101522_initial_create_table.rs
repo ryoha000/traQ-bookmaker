@@ -16,6 +16,8 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(User::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(User::TraqId).string().not_null())
+                    .col(ColumnDef::new(User::TraqDisplayId).string().not_null())
+                    .col(ColumnDef::new(User::ChannelId).string().not_null())
                     .col(ColumnDef::new(User::Balance).integer().not_null())
                     .to_owned(),
             )
@@ -152,6 +154,8 @@ enum User {
     Table,
     Id,
     TraqId,
+    TraqDisplayId,
+    ChannelId,
     Balance,
 }
 

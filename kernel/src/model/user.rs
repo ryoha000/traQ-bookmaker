@@ -1,4 +1,3 @@
-use chrono::{DateTime, Local};
 use derive_new::new;
 
 use super::Id;
@@ -7,6 +6,8 @@ use super::Id;
 pub struct User {
     pub id: Id<User>,
     pub traq_id: String,
+    pub traq_display_id: String,
+    pub channel_id: String,
     pub balance: i64,
 }
 
@@ -14,5 +15,7 @@ pub struct User {
 pub struct NewUser {
     pub id: Id<User>,
     pub traq_id: String,
+    pub traq_display_id: String,
+    pub channel_id: String,
     pub balance: i32,
 }
