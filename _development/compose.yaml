@@ -1,0 +1,13 @@
+version: "3.1"
+
+services:
+  db:
+    image: mariadb:latest
+    # local の 34539 ポートをコンテナの 3306 ポートにマッピング
+    ports:
+      - "34539:3306"
+    environment:
+      MARIADB_DATABASE: bookmaker
+      MARIADB_USER: mariadb
+      MARIADB_PASSWORD: password
+      MARIADB_ROOT_PASSWORD: password
