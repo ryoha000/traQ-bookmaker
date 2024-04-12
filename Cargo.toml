@@ -1,5 +1,5 @@
 [workspace]
-members = ["driver", "adapter", "app", "kernel", "migration"]
+members = ["driver", "adapter", "app", "kernel"]
 
 [workspace.package]
 version = "0.1.0"

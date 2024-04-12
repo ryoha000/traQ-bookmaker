@@ -4,6 +4,11 @@ dotenv:
   - _development/.env.development
 
 tasks:
+  init:
+    cmds: 
+      - go install github.com/go-task/task/v3/cmd/task@latest
+      - cargo install sea-orm-cli
+
   up:
     cmds: 
       - docker compose up -d
@@ -34,3 +39,7 @@ tasks:
       - sea-orm-cli generate entity -u  {{.DATABASE_URL}} -o adapter/src/model
     vars:
       DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}/{{.NS_MARIADB_DATABASE}}
+
+  dev:server:
+    cmds: 
+      - cargo run
