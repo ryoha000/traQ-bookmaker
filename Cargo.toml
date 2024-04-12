@@ -1,0 +1,8 @@
+[workspace]
+members = ["driver", "adapter", "app", "kernel", "migration"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["ryoha000"]
+license = "Unlicense"
+edition = "2021"
