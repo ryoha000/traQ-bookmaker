@@ -9,6 +9,7 @@ use tracing::{info, warn};
 
 use crate::module::Modules;
 
+mod message_created;
 mod ping;
 
 pub async fn post_message(
