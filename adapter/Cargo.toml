@@ -9,6 +9,8 @@ edition.workspace = true
 
 [dependencies]
 kernel = { path = "../kernel" }
+derive-new = "0.6"
+anyhow = "1.0.82"
 
 [dependencies.sea-orm]
 version = "0.12.15"
