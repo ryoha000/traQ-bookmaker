@@ -5,10 +5,14 @@ use kernel::{
     },
     repository::{error::RepositoryError, r#match::MatchRepository},
 };
-use sea_orm::{ActiveModelTrait, IntoActiveModel, TryIntoModel};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionError,
+    TransactionTrait, TryIntoModel,
+};
 
 use crate::model::{
-    r#match::{ActiveModel, Model},
+    candidate::Entity,
+    r#match::{ActiveModel, Column, Model},
     sea_orm_active_enums::Status,
 };
 
@@ -56,22 +60,45 @@ impl From<Status> for MatchStatus {
 
 impl MatchRepository for DatabaseRepositoryImpl<Match> {
     async fn insert(&self, m: NewMatch) -> Result<Match, RepositoryError> {
-        let model = Model {
-            id: m.id.value.to_string(),
-            title: m.title,
-            channel_id: m.channel_id.value.to_string(),
-            message_id: None,
-            created_at: m.created_at,
-            deadline_at: None,
-            status: m.status.into(),
-        };
+        self.db
+            .0
+            .transaction::<_, Match, RepositoryError>(|txn| {
+                Box::pin(async move {
+                    // 同じ channel_id で status が Finished, Cancelled 以外のものがあれば作成しない
+                    let exists = Entity::find()
+                        .filter(Column::ChannelId.eq(&m.channel_id.value.to_string()))
+                        .filter(Column::Status.ne(Status::Finished))
+                        .filter(Column::Status.ne(Status::Cancelled))
+                        .all(txn)
+                        .await
+                        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+                    if exists.len() > 0 {
+                        return Err(RepositoryError::EnabledMatchAlreadyExists);
+                    }
 
-        let result = model
-            .into_active_model()
-            .save(&self.db.0)
+                    let model = Model {
+                        id: m.id.value.to_string(),
+                        title: m.title,
+                        channel_id: m.channel_id.value.to_string(),
+                        message_id: None,
+                        created_at: m.created_at,
+                        deadline_at: None,
+                        status: m.status.into(),
+                    };
+
+                    let result = model
+                        .into_active_model()
+                        .save(txn)
+                        .await
+                        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+                    result.try_into()
+                })
+            })
             .await
-            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
-
-        result.try_into()
+            .map_err(|e| match e {
+                TransactionError::Transaction(repo_err) => repo_err,
+                _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
+            })
     }
 }
