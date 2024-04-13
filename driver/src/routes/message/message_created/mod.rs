@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod help;
+mod r#match;
 mod reg;
 
 #[derive(new)]
