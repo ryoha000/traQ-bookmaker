@@ -1,2 +1,2 @@
-pub mod help;
+pub mod message;
 pub mod user;

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use app::model::help::{CommandSummary, SendSummaryHelpMessage};
+use app::model::message::help::{CommandSummary, SendSummaryHelpMessage};
 
 use crate::module::{Modules, ModulesExt};
 

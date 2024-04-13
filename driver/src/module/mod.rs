@@ -4,7 +4,7 @@ use adapter::{
     modules::{RepositoriesModule, RepositoriesModuleExt},
     persistence::mariadb::Db,
 };
-use app::usecase::{help::HelpUseCase, user::UserUseCase};
+use app::usecase::{message::help::HelpUseCase, user::UserUseCase};
 
 pub struct Modules {
     bot_user_id: String,

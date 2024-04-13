@@ -4,7 +4,7 @@ use adapter::modules::RepositoriesModuleExt;
 use derive_new::new;
 use kernel::traq::{error::TraqRepositoryError, message::MessageTraqRepository};
 
-use crate::model::help::SendSummaryHelpMessage;
+use crate::model::message::help::SendSummaryHelpMessage;
 
 #[derive(new)]
 pub struct HelpUseCase<R: RepositoriesModuleExt> {
