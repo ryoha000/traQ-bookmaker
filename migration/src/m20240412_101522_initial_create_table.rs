@@ -33,7 +33,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Match::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Match::Title).string().not_null())
                     .col(ColumnDef::new(Match::ChannelId).string().not_null())
-                    .col(ColumnDef::new(Match::MessageId).string().not_null())
+                    .col(ColumnDef::new(Match::MessageId).string().null())
                     .col(
                         ColumnDef::new(Match::CreatedAt)
                             .timestamp_with_time_zone()
