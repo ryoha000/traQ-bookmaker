@@ -1,6 +1,7 @@
 use std::env;
 use std::time::Duration;
 
+use migration::MigratorTrait;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 #[derive(Clone)]
@@ -32,6 +33,12 @@ impl Db {
         let db = Database::connect(opt).await.unwrap_or_else(|e| {
             panic!("Failed to connect to MariaDB: {}", e);
         });
+
+        migration::Migrator::up(&db, None)
+            .await
+            .unwrap_or_else(|e| {
+                panic!("Failed to migrate: {}", e);
+            });
         Db(db)
     }
 }

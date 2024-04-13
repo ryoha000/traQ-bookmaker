@@ -9,6 +9,7 @@ edition.workspace = true
 
 [dependencies]
 kernel = { path = "../kernel" }
+migration = { path = "../migration" }
 derive-new = "0.6"
 anyhow = "1.0.82"
 serde = { version = "1.0.197", features = ["derive"] }
