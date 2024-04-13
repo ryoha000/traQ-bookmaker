@@ -21,3 +21,4 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
+derive-new = "0.6"
