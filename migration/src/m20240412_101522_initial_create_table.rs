@@ -32,6 +32,8 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(Match::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Match::Title).string().not_null())
+                    .col(ColumnDef::new(Match::ChannelId).string().not_null())
+                    .col(ColumnDef::new(Match::MessageId).string().not_null())
                     .col(
                         ColumnDef::new(Match::CreatedAt)
                             .timestamp_with_time_zone()
@@ -166,6 +168,8 @@ enum Match {
     Table,
     Id,
     Title,
+    ChannelId,
+    MessageId,
     CreatedAt,
     DeadlineAt,
     #[sea_orm(iden = "status")]
