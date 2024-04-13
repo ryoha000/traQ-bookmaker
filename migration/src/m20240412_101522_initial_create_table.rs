@@ -42,7 +42,7 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(Match::DeadlineAt)
                             .timestamp_with_time_zone()
-                            .not_null(),
+                            .null(),
                     )
                     .col(
                         ColumnDef::new(Match::MatchStatus)

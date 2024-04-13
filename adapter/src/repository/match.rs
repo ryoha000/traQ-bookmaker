@@ -62,7 +62,7 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
             channel_id: m.channel_id.value.to_string(),
             message_id: None,
             created_at: m.created_at,
-            deadline_at: m.deadline_at,
+            deadline_at: None,
             status: m.status.into(),
         };
 

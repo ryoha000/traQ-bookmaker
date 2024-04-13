@@ -9,7 +9,7 @@ pub struct Match {
     pub channel_id: Id<Channel>,
     pub message_id: Option<Id<Message>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
-    pub deadline_at: chrono::DateTime<chrono::Utc>,
+    pub deadline_at: Option<chrono::DateTime<chrono::Utc>>,
     pub status: MatchStatus,
 }
 
@@ -27,6 +27,5 @@ pub struct NewMatch {
     pub title: String,
     pub channel_id: Id<Channel>,
     pub created_at: chrono::DateTime<chrono::Utc>,
-    pub deadline_at: chrono::DateTime<chrono::Utc>,
     pub status: MatchStatus,
 }

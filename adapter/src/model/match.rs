@@ -12,7 +12,7 @@ pub struct Model {
     pub channel_id: String,
     pub message_id: Option<String>,
     pub created_at: DateTimeUtc,
-    pub deadline_at: DateTimeUtc,
+    pub deadline_at: Option<DateTimeUtc>,
     pub status: Status,
 }
 
