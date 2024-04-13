@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod help;
+mod reg;
 
 #[derive(new)]
 pub struct ParseState {
@@ -96,16 +97,24 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
         return Ok(());
     }
 
-    // event.message.textを一文字ずつ処理
     let args = parse_args(&event.message.text);
 
-    if args.is_empty() {
-        return Err(anyhow::anyhow!("No command specified"));
-    }
-
-    let command_name = args[0].clone();
+    let command_name = args
+        .first()
+        .ok_or(anyhow::anyhow!("No command specified"))?;
     match command_name.as_str() {
         "help" | "--help" | "-h" => help::handle(modules, event.message.channel_id).await?,
+        "reg" => {
+            reg::handle(
+                modules,
+                reg::RegArg::new(
+                    event.message.user.id,
+                    event.message.user.name,
+                    event.message.channel_id,
+                ),
+            )
+            .await?
+        }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));
         }
