@@ -4,11 +4,12 @@ use adapter::{
     modules::{RepositoriesModule, RepositoriesModuleExt},
     persistence::mariadb::Db,
 };
-use app::usecase::user::UserUseCase;
+use app::usecase::{help::HelpUseCase, user::UserUseCase};
 
 pub struct Modules {
     bot_user_id: String,
     user_use_case: UserUseCase<RepositoriesModule>,
+    help_use_case: HelpUseCase<RepositoriesModule>,
 }
 
 pub trait ModulesExt {
@@ -17,6 +18,7 @@ pub trait ModulesExt {
     type RepositoriesModule: RepositoriesModuleExt;
 
     fn user_use_case(&self) -> &UserUseCase<Self::RepositoriesModule>;
+    fn help_use_case(&self) -> &HelpUseCase<Self::RepositoriesModule>;
 }
 
 impl ModulesExt for Modules {
@@ -28,6 +30,9 @@ impl ModulesExt for Modules {
 
     fn user_use_case(&self) -> &UserUseCase<Self::RepositoriesModule> {
         &self.user_use_case
+    }
+    fn help_use_case(&self) -> &HelpUseCase<Self::RepositoriesModule> {
+        &self.help_use_case
     }
 }
 
@@ -41,9 +46,12 @@ impl Modules {
 
         let user_use_case = UserUseCase::new(repositories_module.clone());
 
+        let help_use_case = HelpUseCase::new(repositories_module.clone());
+
         Self {
             bot_user_id,
             user_use_case,
+            help_use_case,
         }
     }
 }

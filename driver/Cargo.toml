@@ -13,7 +13,7 @@ kernel = { path = "../kernel" }
 app = { path = "../app" }
 adapter = { path = "../adapter" }
 anyhow = "1.0.82"
-axum = { version = "0.7", features = ["ws"] }
+axum = { version = "0.7" }
 tokio = { version = "1.37", features = ["full"] }
 tower = "0.4"
 futures = "0.3"

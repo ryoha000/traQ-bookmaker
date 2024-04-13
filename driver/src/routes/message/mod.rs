@@ -34,6 +34,7 @@ pub async fn post_message(
 async fn handle_event(modules: Arc<Modules>, event_type: &str, body: String) -> anyhow::Result<()> {
     match event_type {
         "PING" => parse_and_exec(modules, &body, ping::handle).await?,
+        "MESSAGE_CREATED" => parse_and_exec(modules, &body, message_created::handle).await?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown event type: {}, body: {}",
