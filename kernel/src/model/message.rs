@@ -1,15 +1,12 @@
 use derive_new::new;
 
-use super::Id;
+use super::{channel::Channel, Id};
 
 #[derive(new, Debug)]
 pub struct Message {
     pub id: Id<Message>,
     pub channel_id: Id<Channel>,
 }
-
-#[derive(new, Debug)]
-pub struct Channel {}
 
 #[derive(new, Debug)]
 pub struct NewMessage {
