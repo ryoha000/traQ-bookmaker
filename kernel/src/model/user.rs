@@ -8,7 +8,7 @@ pub struct User {
     pub traq_id: String,
     pub traq_display_id: String,
     pub channel_id: String,
-    pub balance: i64,
+    pub balance: i32,
 }
 
 #[derive(new, Debug)]

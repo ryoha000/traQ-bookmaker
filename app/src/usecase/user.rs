@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use adapter::modules::RepositoriesModuleExt;
 use derive_new::new;
-use kernel::repository::{error::RepositoryError, user::UserRepository};
+use kernel::{
+    model::user::User,
+    repository::{error::RepositoryError, user::UserRepository},
+};
 
 use crate::model::user::CreateUser;
 
@@ -12,7 +15,7 @@ pub struct UserUseCase<R: RepositoriesModuleExt> {
 }
 
 impl<R: RepositoriesModuleExt> UserUseCase<R> {
-    pub async fn register_user(&self, source: CreateUser) -> Result<(), UserUseCaseError> {
+    pub async fn register_user(&self, source: CreateUser) -> Result<User, UserUseCaseError> {
         self.repositories
             .user_repository()
             .insert(source.into())
