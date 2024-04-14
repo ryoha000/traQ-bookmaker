@@ -2,6 +2,7 @@ use derive_new::new;
 use std::marker::PhantomData;
 use uuid::Uuid;
 
+pub mod candidate;
 pub mod channel;
 pub mod r#match;
 pub mod message;

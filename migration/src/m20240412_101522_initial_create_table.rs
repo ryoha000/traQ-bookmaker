@@ -81,6 +81,8 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+        // match_id と name に複合ユニーク制約を追加
+        manager.get_connection().execute_unprepared("ALTER TABLE candidate ADD CONSTRAINT unique_candidate_match_id_name UNIQUE (match_id, name)").await?;
 
         manager
             .create_table(
