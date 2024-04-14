@@ -73,7 +73,9 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                         .await
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
                     if exists.len() > 0 {
-                        return Err(RepositoryError::EnabledMatchAlreadyExists);
+                        return Err(RepositoryError::DuplicatedRecord(
+                            "Match with the same channel_id already exists".to_string(),
+                        ));
                     }
 
                     let model = Model {

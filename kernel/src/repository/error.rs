@@ -2,8 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum RepositoryError {
-    #[error("Enabled match already exists")]
-    EnabledMatchAlreadyExists,
+    #[error("Duplicated record: {0}")]
+    DuplicatedRecord(String),
     #[error("Unexpected error: {0}")]
     UnexpectedError(#[from] anyhow::Error),
 }
