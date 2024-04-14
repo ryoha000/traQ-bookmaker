@@ -10,15 +10,11 @@ pub struct SendSummaryHelpMessage {
 #[derive(new)]
 pub struct CommandSummary {
     pub name: String,
-    pub title: String,
     pub description: String,
 }
 
 fn format_summary(command: &CommandSummary) -> String {
-    format!(
-        "#### {}(`{}``)\n{}",
-        command.title, command.name, command.description
-    )
+    format!("- {} (`{}``)", command.name, command.description)
 }
 
 impl From<SendSummaryHelpMessage> for NewMessage {
