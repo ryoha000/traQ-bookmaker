@@ -1,3 +1,4 @@
+use app::model::message::help::{Command, SendHelpMessage};
 use derive_new::new;
 use std::sync::Arc;
 
@@ -7,8 +8,8 @@ use crate::{
 };
 
 mod help;
-mod r#match;
 mod reg;
+mod start;
 
 #[derive(new)]
 pub struct ParseState {
@@ -88,6 +89,12 @@ mod tests {
     }
 }
 
+fn is_help_command(args: &[String]) -> bool {
+    args.first().map(|s| s.as_str()) == Some("help")
+        || args.first().map(|s| s.as_str()) == Some("--help")
+        || args.first().map(|s| s.as_str()) == Some("-h")
+}
+
 pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow::Result<()> {
     let is_mentioned = event
         .message
@@ -102,16 +109,44 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
 
     let command_name = args
         .first()
-        .ok_or(anyhow::anyhow!("No command specified"))?;
-    match command_name.as_str() {
-        "help" | "--help" | "-h" => help::handle(modules, event.message.channel_id).await?,
+        .and_then(|s| Some(s.as_str()))
+        .unwrap_or_default();
+    let args = args.iter().skip(1).cloned().collect::<Vec<_>>();
+    let channel_id = event.message.channel_id;
+    match command_name {
+        "help" | "--help" | "-h" => help::handle(modules, channel_id).await?,
         "reg" => {
             reg::handle(
                 modules,
-                reg::RegArg::new(
-                    event.message.user.id,
-                    event.message.user.name,
-                    event.message.channel_id,
+                reg::RegArg::new(event.message.user.id, event.message.user.name, channel_id),
+            )
+            .await?
+        }
+        "start" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "start".to_string(),
+                            "賭けの開始".to_string(),
+                            "賭けを開始します\n進行中の賭けはチャンネルごとに1つのみです"
+                                .to_string(),
+                            "@BOT_bookmaker start \"VCT PACIFIC\" Gen.G PRX".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            start::handle(
+                modules,
+                start::StartArg::new(
+                    channel_id,
+                    args.first()
+                        .and_then(|s| Some(s.to_string()))
+                        .unwrap_or_default(),
+                    args.iter().skip(1).cloned().collect(),
                 ),
             )
             .await?

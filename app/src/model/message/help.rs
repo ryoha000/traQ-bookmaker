@@ -30,7 +30,7 @@ impl From<SendSummaryHelpMessage> for NewMessage {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let content = format!("### コマンド\n{}\n`@BOT_bookmaker reg --help`のようにすると各コマンドの詳細な説明が得られます", commands_content);
+        let content = format!("### コマンド\n{}", commands_content);
         NewMessage::new(Id::new(c.channel_id), content, false)
     }
 }
