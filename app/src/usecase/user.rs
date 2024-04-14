@@ -2,10 +2,7 @@ use std::sync::Arc;
 
 use adapter::modules::RepositoriesModuleExt;
 use derive_new::new;
-use kernel::{
-    model::user::User,
-    repository::{error::RepositoryError, user::UserRepository},
-};
+use kernel::{model::user::User, repository::user::UserRepository};
 
 use crate::model::user::CreateUser;
 
@@ -21,7 +18,7 @@ impl<R: RepositoriesModuleExt> UserUseCase<R> {
             .insert(source.into())
             .await
             .map_err(|e| match e {
-                RepositoryError::UnexpectedError(e) => UserUseCaseError::UnexpectedError(e),
+                _ => UserUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
             })
     }
 }
