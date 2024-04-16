@@ -26,7 +26,7 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
                 .message_traq_repository()
                 .create(NewMessage::new(
                     Id::new(match_source.channel_id),
-                    "賭けの対象となる候補を2つ以上指定してください\n`@BOT_bookmaker match create 候補A 候補B`の形式で指定できます".to_string(),
+                    "賭けの対象となる候補を2つ以上指定してください\n`@BOT_bookmaker start マッチ名 候補A 候補B`の形式で指定できます".to_string(),
                     true,
                 ))
                 .await
@@ -83,11 +83,40 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
 
         Ok(match_)
     }
+    pub async fn close_match(&self, source: CloseMatch) -> Result<Match, MatchUseCaseError> {
+        let match_ = self
+            .repositories
+            .match_repository()
+            .update_for_latest(source.into())
+            .await
+            .map_err(|e| match e {
+                RepositoryError::RecordNotFound(_) => MatchUseCaseError::EnabledMatchNotFound,
+                _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+            })?;
+
+        let channel_id = Id::new(match_.channel_id.value.clone());
+        self.repositories
+            .message_traq_repository()
+            .create(NewMessage::new(
+                channel_id,
+                format!(
+                    "### 「{}」への bet を締め切りました\nレートは以下の通りです\nTODO: レートの表示",
+                    match_.title
+                ),
+                true,
+            ))
+            .await
+            .map_err(|e| match e {
+                _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+            })?;
+
+        Ok(match_)
+    }
 }
 
 use thiserror::Error;
 
-use crate::model::r#match::CreateMatch;
+use crate::model::r#match::{CloseMatch, CreateMatch};
 
 use super::escape_arg;
 
@@ -97,6 +126,8 @@ pub enum MatchUseCaseError {
     CandidateMustNotBeEmpty,
     #[error("Enabled match already exists")]
     EnabledMatchAlreadyExists,
+    #[error("Enabled match not found")]
+    EnabledMatchNotFound,
     #[error("Unexpected error: {0}")]
     UnexpectedError(#[from] anyhow::Error),
 }

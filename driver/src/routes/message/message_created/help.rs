@@ -15,7 +15,7 @@ pub async fn handle(modules: Arc<Modules>, channel_id: String) -> anyhow::Result
                     "ユーザーの初期登録を行います".to_string(),
                 ),
                 CommandSummary::new("start".to_string(), "賭けを開始します".to_string()),
-                CommandSummary::new("close".to_string(), "賭けを作成します".to_string()),
+                CommandSummary::new("close".to_string(), "bet を締め切ります".to_string()),
             ],
         ))
         .await?;

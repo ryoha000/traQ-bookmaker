@@ -1,5 +1,8 @@
 use derive_new::new;
-use kernel::model::{r#match::NewMatch, Id};
+use kernel::model::{
+    r#match::{NewMatch, UpdateMatchForLatest},
+    Id,
+};
 
 #[derive(new)]
 pub struct CreateMatch {
@@ -15,5 +18,16 @@ impl From<CreateMatch> for NewMatch {
             Id::new(c.channel_id),
             chrono::Utc::now(),
         )
+    }
+}
+
+#[derive(new)]
+pub struct CloseMatch {
+    pub channel_id: String,
+}
+
+impl From<CloseMatch> for UpdateMatchForLatest {
+    fn from(c: CloseMatch) -> Self {
+        UpdateMatchForLatest::new(Id::new(c.channel_id), Some(Some(chrono::Utc::now())), None)
     }
 }

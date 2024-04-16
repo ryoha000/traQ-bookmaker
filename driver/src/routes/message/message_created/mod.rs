@@ -7,6 +7,9 @@ use crate::{
     module::{Modules, ModulesExt},
 };
 
+use self::close::CloseArg;
+
+mod close;
 mod help;
 mod reg;
 mod start;
@@ -150,6 +153,25 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                 ),
             )
             .await?
+        }
+        "close" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "close".to_string(),
+                            "bet の締め切り".to_string(),
+                            "bet を締め切ります。\nこの時点でレートは確定し、bet は受け付けられなくなります"
+                                .to_string(),
+                            "@BOT_bookmaker close".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            close::handle(modules, CloseArg::new(channel_id)).await?
         }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));
