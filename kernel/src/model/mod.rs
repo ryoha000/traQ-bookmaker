@@ -19,3 +19,5 @@ impl<T> Id<T> {
         Id::new(Uuid::new_v4().to_string())
     }
 }
+
+pub type DateTimeUtc = chrono::DateTime<chrono::Utc>;
