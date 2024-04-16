@@ -4,6 +4,7 @@ use derive_new::new;
 
 use crate::persistence::mariadb::Db;
 
+pub mod bet;
 pub mod candidate;
 pub mod r#match;
 pub mod user;
