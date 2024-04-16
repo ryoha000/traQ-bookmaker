@@ -1,8 +1,5 @@
 use derive_new::new;
-use kernel::model::{
-    r#match::{MatchStatus, NewMatch},
-    Id,
-};
+use kernel::model::{r#match::NewMatch, Id};
 
 #[derive(new)]
 pub struct CreateMatch {
@@ -17,7 +14,6 @@ impl From<CreateMatch> for NewMatch {
             c.title,
             Id::new(c.channel_id),
             chrono::Utc::now(),
-            MatchStatus::Scheduled,
         )
     }
 }

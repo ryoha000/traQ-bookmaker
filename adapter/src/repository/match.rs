@@ -1,6 +1,6 @@
 use kernel::{
     model::{
-        r#match::{Match, MatchStatus, NewMatch},
+        r#match::{Match, NewMatch},
         Id,
     },
     repository::{error::RepositoryError, r#match::MatchRepository},
@@ -13,7 +13,6 @@ use sea_orm::{
 use crate::model::{
     candidate::Entity,
     r#match::{ActiveModel, Column, Model},
-    sea_orm_active_enums::Status,
 };
 
 use super::DatabaseRepositoryImpl;
@@ -31,30 +30,9 @@ impl TryFrom<ActiveModel> for Match {
             Id::new(model.channel_id),
             model.message_id.map(Id::new),
             model.created_at,
-            model.deadline_at,
-            model.status.into(),
+            model.closed_at,
+            model.finished_at,
         ))
-    }
-}
-
-impl From<MatchStatus> for Status {
-    fn from(c: MatchStatus) -> Self {
-        match c {
-            MatchStatus::Scheduled => Status::Scheduled,
-            MatchStatus::OnGoing => Status::OnGoing,
-            MatchStatus::Finished => Status::Finished,
-            MatchStatus::Cancelled => Status::Cancelled,
-        }
-    }
-}
-impl From<Status> for MatchStatus {
-    fn from(c: Status) -> Self {
-        match c {
-            Status::Scheduled => MatchStatus::Scheduled,
-            Status::OnGoing => MatchStatus::OnGoing,
-            Status::Finished => MatchStatus::Finished,
-            Status::Cancelled => MatchStatus::Cancelled,
-        }
     }
 }
 
@@ -64,11 +42,10 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
             .0
             .transaction::<_, Match, RepositoryError>(|txn| {
                 Box::pin(async move {
-                    // 同じ channel_id で status が Finished, Cancelled 以外のものがあれば作成しない
+                    // 同じ channel_id で finished_at が null の match が存在する場合はエラー
                     let exists = Entity::find()
                         .filter(Column::ChannelId.eq(&m.channel_id.value.to_string()))
-                        .filter(Column::Status.ne(Status::Finished))
-                        .filter(Column::Status.ne(Status::Cancelled))
+                        .filter(Column::FinishedAt.is_null())
                         .all(txn)
                         .await
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
@@ -84,8 +61,8 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                         channel_id: m.channel_id.value.to_string(),
                         message_id: None,
                         created_at: m.created_at,
-                        deadline_at: None,
-                        status: m.status.into(),
+                        closed_at: None,
+                        finished_at: None,
                     };
 
                     let result = model

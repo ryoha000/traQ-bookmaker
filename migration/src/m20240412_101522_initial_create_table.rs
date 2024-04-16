@@ -1,7 +1,4 @@
-use sea_orm_migration::{
-    prelude::*,
-    sea_orm::{EnumIter, Iterable},
-};
+use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -40,14 +37,14 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(Match::DeadlineAt)
+                        ColumnDef::new(Match::ClosedAt)
                             .timestamp_with_time_zone()
                             .null(),
                     )
                     .col(
-                        ColumnDef::new(Match::MatchStatus)
-                            .enumeration(Alias::new("match_status"), MatchStatus::iter())
-                            .not_null(),
+                        ColumnDef::new(Match::FinishedAt)
+                            .timestamp_with_time_zone()
+                            .null(),
                     )
                     .to_owned(),
             )
@@ -173,21 +170,8 @@ enum Match {
     ChannelId,
     MessageId,
     CreatedAt,
-    DeadlineAt,
-    #[sea_orm(iden = "status")]
-    MatchStatus,
-}
-
-#[derive(Iden, EnumIter)]
-pub enum MatchStatus {
-    #[iden = "Scheduled"]
-    Scheduled,
-    #[iden = "OnGoing"]
-    OnGoing,
-    #[iden = "Finished"]
-    Finished,
-    #[iden = "Cancelled"]
-    Cancelled,
+    ClosedAt,
+    FinishedAt,
 }
 
 #[derive(DeriveIden)]

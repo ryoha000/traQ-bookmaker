@@ -5,5 +5,4 @@ pub mod prelude;
 pub mod bet;
 pub mod candidate;
 pub mod r#match;
-pub mod sea_orm_active_enums;
 pub mod user;

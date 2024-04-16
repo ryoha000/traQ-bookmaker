@@ -9,16 +9,8 @@ pub struct Match {
     pub channel_id: Id<Channel>,
     pub message_id: Option<Id<Message>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
-    pub deadline_at: Option<chrono::DateTime<chrono::Utc>>,
-    pub status: MatchStatus,
-}
-
-#[derive(Debug)]
-pub enum MatchStatus {
-    Scheduled,
-    OnGoing,
-    Finished,
-    Cancelled,
+    pub closed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub finished_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(new, Debug)]
@@ -27,5 +19,4 @@ pub struct NewMatch {
     pub title: String,
     pub channel_id: Id<Channel>,
     pub created_at: chrono::DateTime<chrono::Utc>,
-    pub status: MatchStatus,
 }
