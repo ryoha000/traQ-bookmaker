@@ -3,6 +3,7 @@ use std::sync::Arc;
 use adapter::modules::RepositoriesModuleExt;
 use derive_new::new;
 use kernel::model::candidate::NewCandidate;
+use kernel::model::channel::Channel;
 use kernel::model::message::NewMessage;
 use kernel::model::r#match::Match;
 use kernel::model::Id;
@@ -116,7 +117,7 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
 
         Ok(match_)
     }
-    async fn finish_match(&self, source: FinishMatch) -> Result<Match, MatchUseCaseError> {
+    pub async fn finish_match(&self, source: FinishMatch) -> Result<Match, MatchUseCaseError> {
         let channel_id = Id::new(source.channel_id.clone());
         let winner_candidate_name = source.winner_candidate_name.clone();
         let match_result = self
@@ -176,6 +177,48 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
             })?;
 
         Ok(match_)
+    }
+    pub async fn delete_match(&self, channel_id: Id<Channel>) -> Result<(), MatchUseCaseError> {
+        let delete_result = self
+            .repositories
+            .match_repository()
+            .delete_latest(Id::new(channel_id.value.clone()))
+            .await;
+        if let Err(e) = delete_result {
+            match e {
+                RepositoryError::RecordNotFound(_) => {
+                    self.repositories
+                        .message_traq_repository()
+                        .create(NewMessage::new(
+                            channel_id,
+                            "有効な賭けが見つかりませんでした".to_string(),
+                            true,
+                        ))
+                        .await
+                        .map_err(|e| match e {
+                            _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+                        })?;
+                    return Err(MatchUseCaseError::EnabledMatchNotFound);
+                }
+                _ => {
+                    return Err(MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)));
+                }
+            }
+        }
+
+        self.repositories
+            .message_traq_repository()
+            .create(NewMessage::new(
+                channel_id,
+                "最新の賭けをキャンセルしました".to_string(),
+                true,
+            ))
+            .await
+            .map_err(|e| match e {
+                _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+            })?;
+
+        Ok(())
     }
 }
 
