@@ -6,13 +6,25 @@ use kernel::{
     repository::{bet::BetRepository, error::RepositoryError},
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder, SqlErr,
     TransactionError, TransactionTrait, TryIntoModel,
 };
 
 use crate::model::bet::{ActiveModel, Model};
 
 use super::DatabaseRepositoryImpl;
+
+impl From<Model> for Bet {
+    fn from(model: Model) -> Self {
+        Bet::new(
+            Id::new(model.id),
+            Id::new(model.user_id),
+            Id::new(model.match_id),
+            Id::new(model.candidate_id),
+            model.amount,
+        )
+    }
+}
 
 impl TryFrom<ActiveModel> for Bet {
     type Error = RepositoryError;
@@ -21,13 +33,7 @@ impl TryFrom<ActiveModel> for Bet {
         let model = c
             .try_into_model()
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
-        Ok(Bet::new(
-            Id::new(model.id),
-            Id::new(model.user_id),
-            Id::new(model.match_id),
-            Id::new(model.candidate_id),
-            model.amount,
-        ))
+        Ok(model.into())
     }
 }
 
@@ -79,11 +85,15 @@ impl BetRepository for DatabaseRepositoryImpl<Bet> {
                         amount: m.amount,
                     };
 
-                    let result = model
-                        .into_active_model()
-                        .save(txn)
-                        .await
-                        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+                    let result =
+                        model.into_active_model().save(txn).await.map_err(|e| {
+                            match e.sql_err() {
+                                Some(SqlErr::UniqueConstraintViolation(s)) => {
+                                    RepositoryError::DuplicatedRecord(s.to_string())
+                                }
+                                _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
+                            }
+                        })?;
 
                     result.try_into()
                 })
