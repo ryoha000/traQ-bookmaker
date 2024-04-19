@@ -12,14 +12,20 @@ pub struct Model {
     pub message_id: Option<String>,
     pub created_at: DateTimeUtc,
     pub closed_at: Option<DateTimeUtc>,
-    pub finished_at: Option<DateTimeUtc>,
+    pub winner_candidate_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::bet::Entity")]
     Bet,
-    #[sea_orm(has_many = "super::candidate::Entity")]
+    #[sea_orm(
+        belongs_to = "super::candidate::Entity",
+        from = "Column::WinnerCandidateId",
+        to = "super::candidate::Column::Id",
+        on_update = "Restrict",
+        on_delete = "Restrict"
+    )]
     Candidate,
 }
 

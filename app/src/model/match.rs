@@ -31,3 +31,19 @@ impl From<CloseMatch> for UpdateMatchForLatest {
         UpdateMatchForLatest::new(Id::new(c.channel_id), Some(Some(chrono::Utc::now())), None)
     }
 }
+
+#[derive(new)]
+pub struct FinishMatch {
+    pub channel_id: String,
+    pub winner_candidate_name: String,
+}
+
+impl From<FinishMatch> for UpdateMatchForLatest {
+    fn from(c: FinishMatch) -> Self {
+        UpdateMatchForLatest::new(
+            Id::new(c.channel_id),
+            None,
+            Some(Some(c.winner_candidate_name)),
+        )
+    }
+}

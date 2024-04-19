@@ -48,7 +48,7 @@ impl BetRepository for DatabaseRepositoryImpl<Bet> {
                 Box::pin(async move {
                     let match_ = crate::model::r#match::Entity::find()
                         .filter(crate::model::r#match::Column::ClosedAt.is_null())
-                        .filter(crate::model::r#match::Column::FinishedAt.is_null())
+                        .filter(crate::model::r#match::Column::WinnerCandidateId.is_null())
                         .order_by_desc(crate::model::r#match::Column::CreatedAt)
                         .one(txn)
                         .await

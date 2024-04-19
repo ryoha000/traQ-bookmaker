@@ -41,11 +41,7 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .null(),
                     )
-                    .col(
-                        ColumnDef::new(Match::FinishedAt)
-                            .timestamp_with_time_zone()
-                            .null(),
-                    )
+                    .col(ColumnDef::new(Match::WinnerCandidateId).string().null())
                     .to_owned(),
             )
             .await?;
@@ -80,6 +76,17 @@ impl MigrationTrait for Migration {
             .await?;
         // match_id と name に複合ユニーク制約を追加
         manager.get_connection().execute_unprepared("ALTER TABLE candidate ADD CONSTRAINT unique_candidate_match_id_name UNIQUE (match_id, name)").await?;
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
+                    .name("fk_match_winner_candidate_id")
+                    .from_tbl(Match::Table)
+                    .to_tbl(Candidate::Table)
+                    .from_col(Match::WinnerCandidateId)
+                    .to_col(Candidate::Id)
+                    .to_owned(),
+            )
+            .await?;
 
         manager
             .create_table(
@@ -173,7 +180,7 @@ enum Match {
     MessageId,
     CreatedAt,
     ClosedAt,
-    FinishedAt,
+    WinnerCandidateId,
 }
 
 #[derive(DeriveIden)]

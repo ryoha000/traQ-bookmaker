@@ -24,7 +24,7 @@ impl From<Model> for Match {
             model.message_id.map(Id::new),
             model.created_at,
             model.closed_at,
-            model.finished_at,
+            model.winner_candidate_id.map(Id::new),
         )
     }
 }
@@ -49,7 +49,7 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                     // 同じ channel_id で finished_at が null の match が存在する場合はエラー
                     let exists = Entity::find()
                         .filter(Column::ChannelId.eq(&m.channel_id.value.to_string()))
-                        .filter(Column::FinishedAt.is_null())
+                        .filter(Column::WinnerCandidateId.is_null())
                         .all(txn)
                         .await
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
@@ -66,7 +66,7 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                         message_id: None,
                         created_at: m.created_at,
                         closed_at: None,
-                        finished_at: None,
+                        winner_candidate_id: None,
                     };
 
                     let result = model
@@ -100,17 +100,48 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                             _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
                         })?;
 
-                    let mut match_ = model
-                        .ok_or(RepositoryError::RecordNotFound(
-                            "Match with the same channel_id not found".to_string(),
-                        ))?
-                        .into_active_model();
+                    let model = model.ok_or(RepositoryError::RecordNotFound(
+                        "Match with the same channel_id not found".to_string(),
+                    ))?;
+                    let match_id = model.id.clone();
+                    let mut match_ = model.into_active_model();
 
                     if let Some(closed_at) = m.closed_at {
+                        if match_.closed_at.is_set() {
+                            return Err(RepositoryError::DuplicatedRecord(
+                                "Match is already closed".to_string(),
+                            ));
+                        }
                         match_.closed_at = Set(closed_at);
                     }
-                    if let Some(finished_at) = m.finished_at {
-                        match_.finished_at = Set(finished_at);
+                    if let Some(winner_candidate_name) = m.winner_candidate_name {
+                        if match_.winner_candidate_id.is_set() {
+                            return Err(RepositoryError::DuplicatedRecord(
+                                "Winner candidate is already set".to_string(),
+                            ));
+                        }
+                        match winner_candidate_name {
+                            Some(name) => {
+                                let candidate = crate::model::candidate::Entity::find()
+                                    .filter(crate::model::candidate::Column::MatchId.eq(match_id))
+                                    .filter(crate::model::candidate::Column::Name.eq(name))
+                                    .one(txn)
+                                    .await
+                                    .map_err(|e| {
+                                        RepositoryError::UnexpectedError(anyhow::anyhow!(e))
+                                    })?
+                                    .ok_or(RepositoryError::RecordNotFound(
+                                        "Candidate not found".to_string(),
+                                    ))?;
+                                match_.winner_candidate_id = Set(Some(candidate.id));
+                                return Err(RepositoryError::DuplicatedRecord(
+                                    "Winner candidate is already set".to_string(),
+                                ));
+                            }
+                            None => {
+                                match_.winner_candidate_id = Set(None);
+                            }
+                        }
                     }
                     match_
                         .update(txn)
@@ -142,7 +173,7 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
     async fn delete_latest(&self, channel_id: Id<Channel>) -> Result<(), RepositoryError> {
         let model = Entity::find()
             .filter(Column::ChannelId.eq(&channel_id.value.to_string()))
-            .filter(Column::FinishedAt.is_null())
+            .filter(Column::WinnerCandidateId.is_null())
             .order_by_desc(Column::CreatedAt)
             .one(&self.db.0)
             .await
