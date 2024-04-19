@@ -10,6 +10,7 @@ use crate::{
 use self::close::CloseArg;
 
 mod bet;
+mod cancel;
 mod close;
 mod help;
 mod reg;
@@ -206,6 +207,25 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                 ),
             )
             .await?
+        }
+        "cancel" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "cancel".to_string(),
+                            "賭けのキャンセル".to_string(),
+                            "賭けをキャンセルします\nこのチャンネルで最新のまだ勝者が決まっていない賭けのみが有効です\n`@BOT_bookmaker cancel`の形式で指定できます"
+                                .to_string(),
+                            "@BOT_bookmaker cancel".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            cancel::handle(modules, cancel::CancelArg::new(event.message.user.id)).await?
         }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));
