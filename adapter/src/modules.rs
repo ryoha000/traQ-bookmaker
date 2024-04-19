@@ -4,7 +4,7 @@ use kernel::{
         bet::BetRepository, candidate::CandidateRepository, r#match::MatchRepository,
         user::UserRepository,
     },
-    traq::message::MessageTraqRepository,
+    traq::{message::MessageTraqRepository, stamp::StampTraqRepository},
 };
 
 use crate::{
@@ -16,7 +16,9 @@ pub struct RepositoriesModule {
     match_repository: DatabaseRepositoryImpl<Match>,
     candidate_repository: DatabaseRepositoryImpl<Candidate>,
     bet_repository: DatabaseRepositoryImpl<Bet>,
+
     message_traq_repository: TraqRepositoryImpl,
+    stamp_repository: TraqRepositoryImpl,
 }
 
 pub trait RepositoriesModuleExt {
@@ -24,12 +26,15 @@ pub trait RepositoriesModuleExt {
     type MatchRepo: MatchRepository;
     type CandidateRepo: CandidateRepository;
     type BetRepo: BetRepository;
-    type MessageTraqRepo: MessageTraqRepository;
     fn user_repository(&self) -> &Self::UserRepo;
     fn match_repository(&self) -> &Self::MatchRepo;
     fn candidate_repository(&self) -> &Self::CandidateRepo;
     fn bet_repository(&self) -> &Self::BetRepo;
+
+    type MessageTraqRepo: MessageTraqRepository;
+    type StampRepo: StampTraqRepository;
     fn message_traq_repository(&self) -> &Self::MessageTraqRepo;
+    fn stamp_repository(&self) -> &Self::StampRepo;
 }
 
 impl RepositoriesModuleExt for RepositoriesModule {
@@ -37,7 +42,6 @@ impl RepositoriesModuleExt for RepositoriesModule {
     type MatchRepo = DatabaseRepositoryImpl<Match>;
     type CandidateRepo = DatabaseRepositoryImpl<Candidate>;
     type BetRepo = DatabaseRepositoryImpl<Bet>;
-    type MessageTraqRepo = TraqRepositoryImpl;
     fn user_repository(&self) -> &Self::UserRepo {
         &self.user_repository
     }
@@ -50,8 +54,14 @@ impl RepositoriesModuleExt for RepositoriesModule {
     fn bet_repository(&self) -> &Self::BetRepo {
         &self.bet_repository
     }
+
+    type MessageTraqRepo = TraqRepositoryImpl;
+    type StampRepo = TraqRepositoryImpl;
     fn message_traq_repository(&self) -> &Self::MessageTraqRepo {
         &self.message_traq_repository
+    }
+    fn stamp_repository(&self) -> &Self::StampRepo {
+        &self.stamp_repository
     }
 }
 
@@ -64,7 +74,8 @@ impl RepositoriesModule {
             match_repository: DatabaseRepositoryImpl::new(db.clone()),
             candidate_repository: DatabaseRepositoryImpl::new(db.clone()),
             bet_repository: DatabaseRepositoryImpl::new(db.clone()),
-            message_traq_repository: TraqRepositoryImpl::new(access_token),
+            message_traq_repository: TraqRepositoryImpl::new(access_token.clone()),
+            stamp_repository: TraqRepositoryImpl::new(access_token),
         }
     }
 }
