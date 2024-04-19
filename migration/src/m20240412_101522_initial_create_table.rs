@@ -127,6 +127,8 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+        // match_id と user_id に複合ユニーク制約を追加
+        manager.get_connection().execute_unprepared("ALTER TABLE bet ADD CONSTRAINT unique_bet_match_id_user_id UNIQUE (match_id, user_id)").await?;
 
         Ok(())
     }
