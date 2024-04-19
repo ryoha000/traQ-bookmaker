@@ -19,4 +19,8 @@ pub trait MatchRepository {
         &self,
         channel_id: Id<Channel>,
     ) -> impl std::future::Future<Output = Result<Option<Match>, RepositoryError>> + Send;
+    fn delete_latest(
+        &self,
+        channel_id: Id<Channel>,
+    ) -> impl std::future::Future<Output = Result<(), RepositoryError>> + Send;
 }

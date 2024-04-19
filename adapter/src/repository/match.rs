@@ -15,14 +15,9 @@ use crate::model::r#match::{ActiveModel, Column, Entity, Model};
 
 use super::DatabaseRepositoryImpl;
 
-impl TryFrom<ActiveModel> for Match {
-    type Error = RepositoryError;
-
-    fn try_from(c: ActiveModel) -> Result<Self, Self::Error> {
-        let model = c
-            .try_into_model()
-            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
-        Ok(Match::new(
+impl From<Model> for Match {
+    fn from(model: Model) -> Self {
+        Match::new(
             Id::new(model.id),
             model.title,
             Id::new(model.channel_id),
@@ -30,7 +25,18 @@ impl TryFrom<ActiveModel> for Match {
             model.created_at,
             model.closed_at,
             model.finished_at,
-        ))
+        )
+    }
+}
+
+impl TryFrom<ActiveModel> for Match {
+    type Error = RepositoryError;
+
+    fn try_from(c: ActiveModel) -> Result<Self, Self::Error> {
+        let model = c
+            .try_into_model()
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+        Ok(model.into())
     }
 }
 
@@ -131,6 +137,29 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
         match result {
             Some(model) => Ok(Some(model.into_active_model().try_into()?)),
             None => Ok(None),
+        }
+    }
+    async fn delete_latest(&self, channel_id: Id<Channel>) -> Result<(), RepositoryError> {
+        let model = Entity::find()
+            .filter(Column::ChannelId.eq(&channel_id.value.to_string()))
+            .filter(Column::FinishedAt.is_null())
+            .order_by_desc(Column::CreatedAt)
+            .one(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match model {
+            Some(model) => {
+                model
+                    .into_active_model()
+                    .delete(&self.db.0)
+                    .await
+                    .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+                Ok(())
+            }
+            None => Err(RepositoryError::RecordNotFound(
+                "Match with the same channel_id not found".to_string(),
+            )),
         }
     }
 }
