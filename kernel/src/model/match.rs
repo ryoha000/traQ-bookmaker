@@ -25,5 +25,5 @@ pub struct NewMatch {
 pub struct UpdateMatchForLatest {
     pub channel_id: Id<Channel>,
     pub closed_at: Option<Option<DateTimeUtc>>,
-    pub winner_candidate_id: Option<Option<Id<Candidate>>>,
+    pub winner_candidate_name: Option<Option<String>>,
 }

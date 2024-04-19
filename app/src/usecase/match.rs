@@ -10,6 +10,10 @@ use kernel::repository::error::RepositoryError;
 use kernel::repository::{candidate::CandidateRepository, r#match::MatchRepository};
 use kernel::traq::message::MessageTraqRepository;
 
+use crate::model::r#match::{CloseMatch, CreateMatch, FinishMatch};
+
+use super::escape_arg;
+
 #[derive(new)]
 pub struct MatchUseCase<R: RepositoriesModuleExt> {
     repositories: Arc<R>,
@@ -26,7 +30,7 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
                 .message_traq_repository()
                 .create(NewMessage::new(
                     Id::new(match_source.channel_id),
-                    "賭けの対象となる候補を2つ以上指定してください\n`@BOT_bookmaker start マッチ名 候補A 候補B`の形式で指定できます".to_string(),
+                    "賭けの対象となる候補を2つ以上指定してください\n`@BOT_bookmaker start 賭け名 候補A 候補B`の形式で指定できます".to_string(),
                     true,
                 ))
                 .await
@@ -112,16 +116,75 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
 
         Ok(match_)
     }
+    async fn finish_match(&self, source: FinishMatch) -> Result<Match, MatchUseCaseError> {
+        let channel_id = Id::new(source.channel_id.clone());
+        let winner_candidate_name = source.winner_candidate_name.clone();
+        let match_result = self
+            .repositories
+            .match_repository()
+            .update_for_latest(source.into())
+            .await;
+
+        let match_ = match match_result {
+            Ok(match_) => match_,
+            Err(e) => {
+                let error_with_message = {
+                    match e {
+                        RepositoryError::RecordNotFound(_) => (
+                            "有効な賭けが見つかりませんでした",
+                            MatchUseCaseError::EnabledMatchNotFound,
+                        ),
+                        RepositoryError::DuplicatedRecord(_) => (
+                            "賭けの勝者は既に設定されています",
+                            MatchUseCaseError::WinnerCandidateAlreadySet,
+                        ),
+                        _ => (
+                            "予期せぬエラーが発生しました",
+                            MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+                        ),
+                    }
+                };
+                self.repositories
+                    .message_traq_repository()
+                    .create(NewMessage::new(
+                        channel_id,
+                        error_with_message.0.to_string(),
+                        true,
+                    ))
+                    .await
+                    .map_err(|e| match e {
+                        _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+                    })?;
+                return Err(error_with_message.1);
+            }
+        };
+
+        let channel_id = Id::new(match_.channel_id.value.clone());
+        self.repositories
+            .message_traq_repository()
+            .create(NewMessage::new(
+                channel_id,
+                format!(
+                    "### 「{}」の勝者は{}です\nTODO: ユーザーのポイント増減と総ポイント数",
+                    match_.title, winner_candidate_name
+                ),
+                true,
+            ))
+            .await
+            .map_err(|e| match e {
+                _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+            })?;
+
+        Ok(match_)
+    }
 }
 
 use thiserror::Error;
 
-use crate::model::r#match::{CloseMatch, CreateMatch};
-
-use super::escape_arg;
-
 #[derive(Error, Debug)]
 pub enum MatchUseCaseError {
+    #[error("Winner candidate already set")]
+    WinnerCandidateAlreadySet,
     #[error("Candidates must not be empty")]
     CandidateMustNotBeEmpty,
     #[error("Enabled match already exists")]
