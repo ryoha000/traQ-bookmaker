@@ -1,15 +1,27 @@
 use kernel::{
     model::{
         candidate::{Candidate, NewCandidate},
+        r#match::Match,
         Id,
     },
     repository::{candidate::CandidateRepository, error::RepositoryError},
 };
-use sea_orm::{EntityTrait, IntoActiveModel, SqlErr, TryIntoModel};
+use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, SqlErr, TryIntoModel};
 
-use crate::model::candidate::{ActiveModel, Entity, Model};
+use crate::model::candidate::{ActiveModel, Column, Entity, Model};
 
 use super::DatabaseRepositoryImpl;
+
+impl From<Model> for Candidate {
+    fn from(model: Model) -> Self {
+        Candidate::new(
+            Id::new(model.id),
+            model.name,
+            Id::new(model.match_id),
+            model.is_winner.and_then(|v| Some(v != 0)),
+        )
+    }
+}
 
 impl TryFrom<ActiveModel> for Candidate {
     type Error = RepositoryError;
@@ -18,12 +30,7 @@ impl TryFrom<ActiveModel> for Candidate {
         let model = c
             .try_into_model()
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
-        Ok(Candidate::new(
-            Id::new(model.id),
-            model.name,
-            Id::new(model.match_id),
-            model.is_winner.and_then(|v| Some(v != 0)),
-        ))
+        Ok(model.into())
     }
 }
 
@@ -54,5 +61,22 @@ impl CandidateRepository for DatabaseRepositoryImpl<Candidate> {
             })?;
 
         Ok(())
+    }
+    async fn find_by_name_and_match_id(
+        &self,
+        name: String,
+        match_id: Id<Match>,
+    ) -> Result<Option<Candidate>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::Name.eq(name))
+            .filter(Column::MatchId.eq(match_id.value))
+            .one(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match result {
+            Some(model) => Ok(Some(model.into_active_model().try_into()?)),
+            None => Ok(None),
+        }
     }
 }
