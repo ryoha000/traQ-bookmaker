@@ -5,9 +5,11 @@ use kernel::{
     },
     repository::{error::RepositoryError, user::UserRepository},
 };
-use sea_orm::{ActiveModelTrait, IntoActiveModel, TryIntoModel};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TryIntoModel,
+};
 
-use crate::model::user::{ActiveModel, Model};
+use crate::model::user::{ActiveModel, Column, Entity, Model};
 
 use super::DatabaseRepositoryImpl;
 
@@ -45,5 +47,17 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
 
         result.try_into()
+    }
+    async fn find_by_traq_id(&self, traq_id: String) -> Result<Option<User>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::TraqId.eq(traq_id))
+            .one(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match result {
+            Some(model) => Ok(Some(model.into_active_model().try_into()?)),
+            None => Ok(None),
+        }
     }
 }
