@@ -4,12 +4,15 @@ use adapter::{
     modules::{RepositoriesModule, RepositoriesModuleExt},
     persistence::mariadb::Db,
 };
-use app::usecase::{message::MessageUseCase, r#match::MatchUseCase, user::UserUseCase};
+use app::usecase::{
+    bet::BetUseCase, message::MessageUseCase, r#match::MatchUseCase, user::UserUseCase,
+};
 
 pub struct Modules {
     bot_user_id: String,
     user_use_case: UserUseCase<RepositoriesModule>,
     match_use_case: MatchUseCase<RepositoriesModule>,
+    bet_use_case: BetUseCase<RepositoriesModule>,
     message_use_case: MessageUseCase<RepositoriesModule>,
 }
 
@@ -20,6 +23,7 @@ pub trait ModulesExt {
 
     fn user_use_case(&self) -> &UserUseCase<Self::RepositoriesModule>;
     fn match_use_case(&self) -> &MatchUseCase<Self::RepositoriesModule>;
+    fn bet_use_case(&self) -> &BetUseCase<Self::RepositoriesModule>;
     fn message_use_case(&self) -> &MessageUseCase<Self::RepositoriesModule>;
 }
 
@@ -35,6 +39,9 @@ impl ModulesExt for Modules {
     }
     fn match_use_case(&self) -> &MatchUseCase<Self::RepositoriesModule> {
         &self.match_use_case
+    }
+    fn bet_use_case(&self) -> &BetUseCase<Self::RepositoriesModule> {
+        &self.bet_use_case
     }
     fn message_use_case(&self) -> &MessageUseCase<Self::RepositoriesModule> {
         &self.message_use_case
@@ -53,12 +60,15 @@ impl Modules {
 
         let match_use_case = MatchUseCase::new(repositories_module.clone());
 
+        let bet_use_case = BetUseCase::new(repositories_module.clone());
+
         let message_use_case = MessageUseCase::new(repositories_module.clone());
 
         Self {
             bot_user_id,
             user_use_case,
             match_use_case,
+            bet_use_case,
             message_use_case,
         }
     }

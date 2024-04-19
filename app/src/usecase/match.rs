@@ -69,7 +69,7 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
             .create(NewMessage::new(
                 channel_id,
                 format!(
-                    "### 「{}」が開始されました\n対象は{}です。\n`@BOT_bookmaker bet {}`の形式で参加できます",
+                    "### 「{}」が開始されました\n対象は{}です。\n`@BOT_bookmaker bet {} ポイント数`の形式で参加できます",
                     match_.title,
                     candidates_source.join(", "),
                     escape_arg(&candidates_source[0]),

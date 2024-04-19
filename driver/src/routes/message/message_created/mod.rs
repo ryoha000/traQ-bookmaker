@@ -9,6 +9,7 @@ use crate::{
 
 use self::close::CloseArg;
 
+mod bet;
 mod close;
 mod help;
 mod reg;
@@ -172,6 +173,39 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                 return Ok(());
             }
             close::handle(modules, CloseArg::new(channel_id)).await?
+        }
+        "bet" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "bet".to_string(),
+                            "賭け".to_string(),
+                            "賭けを行います\n賭けの対象となる候補を指定し、賭けるポイントは正の整数を指定してください\n`@BOT_bookmaker bet 候補A ポイント数`の形式で指定できます"
+                                .to_string(),
+                            "@BOT_bookmaker bet 候補A 1000".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            bet::handle(
+                modules,
+                bet::BetArg::new(
+                    event.message.user.id,
+                    args.first()
+                        .and_then(|s| Some(s.to_string()))
+                        .unwrap_or_default(),
+                    args.get(1)
+                        .and_then(|s| s.parse::<i32>().ok())
+                        .unwrap_or_default(),
+                    channel_id,
+                    event.message.id,
+                ),
+            )
+            .await?
         }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));
