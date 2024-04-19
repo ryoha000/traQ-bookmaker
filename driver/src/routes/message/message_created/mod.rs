@@ -12,6 +12,7 @@ use self::close::CloseArg;
 mod bet;
 mod cancel;
 mod close;
+mod finish;
 mod help;
 mod reg;
 mod start;
@@ -226,6 +227,34 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                 return Ok(());
             }
             cancel::handle(modules, cancel::CancelArg::new(event.message.user.id)).await?
+        }
+        "finish" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "finish".to_string(),
+                            "賭けの終了".to_string(),
+                            "賭けを終了しポイントを分配します\n既に勝者が決まっている賭けではエラーになります\n`@BOT_bookmaker finish 勝者名`の形式で指定できます"
+                                .to_string(),
+                            "@BOT_bookmaker finish 勝者名".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            finish::handle(
+                modules,
+                finish::FinishArg::new(
+                    event.message.user.id,
+                    args.first()
+                        .and_then(|s| Some(s.to_string()))
+                        .unwrap_or_default(),
+                ),
+            )
+            .await?
         }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));

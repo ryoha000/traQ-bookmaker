@@ -160,6 +160,8 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
             }
         };
 
+        // TODO: ポイントの増減処理
+
         let channel_id = Id::new(match_.channel_id.value.clone());
         self.repositories
             .message_traq_repository()
