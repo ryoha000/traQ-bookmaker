@@ -1,4 +1,8 @@
-use crate::model::r#match::{Match, NewMatch, UpdateMatchForLatest};
+use crate::model::{
+    channel::Channel,
+    r#match::{Match, NewMatch, UpdateMatchForLatest},
+    Id,
+};
 
 use super::error::RepositoryError;
 
@@ -11,4 +15,8 @@ pub trait MatchRepository {
         &self,
         m: UpdateMatchForLatest,
     ) -> impl std::future::Future<Output = Result<Match, RepositoryError>> + Send;
+    fn find_latest(
+        &self,
+        channel_id: Id<Channel>,
+    ) -> impl std::future::Future<Output = Result<Option<Match>, RepositoryError>> + Send;
 }

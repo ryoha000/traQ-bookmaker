@@ -1,5 +1,6 @@
 use kernel::{
     model::{
+        channel::Channel,
         r#match::{Match, NewMatch, UpdateMatchForLatest},
         Id,
     },
@@ -118,5 +119,18 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                 TransactionError::Transaction(repo_err) => repo_err,
                 _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
             })
+    }
+    async fn find_latest(&self, channel_id: Id<Channel>) -> Result<Option<Match>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::ChannelId.eq(&channel_id.value.to_string()))
+            .order_by_desc(Column::CreatedAt)
+            .one(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match result {
+            Some(model) => Ok(Some(model.into_active_model().try_into()?)),
+            None => Ok(None),
+        }
     }
 }
