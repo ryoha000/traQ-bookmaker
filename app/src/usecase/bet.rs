@@ -51,8 +51,6 @@ impl<R: RepositoriesModuleExt> BetUseCase<R> {
                         _ => BetUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
                     })?;
 
-                // TODO: レートの変化を bet.match.message_id から update
-
                 return Ok(bet);
             }
             Err(e) => match e {
