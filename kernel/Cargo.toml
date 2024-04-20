@@ -19,3 +19,6 @@ features = [
   "v4",       # Lets you generate random UUIDs
   "fast-rng", # Use a faster (but still sufficiently random) RNG
 ]
+
+[dev-dependencies]
+random-string = "1.1"
