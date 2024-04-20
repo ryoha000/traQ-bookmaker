@@ -8,6 +8,7 @@ pub mod channel;
 pub mod r#match;
 pub mod message;
 pub mod stamp;
+pub mod statistic;
 pub mod user;
 
 #[derive(new, Debug, Clone)]
