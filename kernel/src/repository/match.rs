@@ -19,6 +19,10 @@ pub trait MatchRepository {
         &self,
         m: UpdateMatchForLatest,
     ) -> impl std::future::Future<Output = Result<Match, RepositoryError>> + Send;
+    fn find(
+        &self,
+        match_id: Id<Match>,
+    ) -> impl std::future::Future<Output = Result<Option<Match>, RepositoryError>> + Send;
     fn find_latest(
         &self,
         channel_id: Id<Channel>,

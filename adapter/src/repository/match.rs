@@ -106,12 +106,11 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                     if let Some(message_id) = m.message_id {
                         match_.message_id = Set(message_id.map(|id| id.value));
                     }
-                    match_
+                    Ok(match_
                         .update(txn)
                         .await
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?
-                        .into_active_model()
-                        .try_into()
+                        .into())
                 })
             })
             .await
@@ -179,12 +178,11 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                             }
                         }
                     }
-                    match_
+                    Ok(match_
                         .update(txn)
                         .await
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?
-                        .into_active_model()
-                        .try_into()
+                        .into())
                 })
             })
             .await
@@ -192,6 +190,18 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                 TransactionError::Transaction(repo_err) => repo_err,
                 _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
             })
+    }
+    async fn find(&self, match_id: Id<Match>) -> Result<Option<Match>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::Id.eq(&match_id.value.to_string()))
+            .one(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match result {
+            Some(model) => Ok(Some(model.into())),
+            None => Ok(None),
+        }
     }
     async fn find_latest(&self, channel_id: Id<Channel>) -> Result<Option<Match>, RepositoryError> {
         let result = Entity::find()
@@ -202,7 +212,7 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
 
         match result {
-            Some(model) => Ok(Some(model.into_active_model().try_into()?)),
+            Some(model) => Ok(Some(model.into())),
             None => Ok(None),
         }
     }

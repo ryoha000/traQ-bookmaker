@@ -17,16 +17,25 @@ impl<R: RepositoriesModuleExt> MessageUseCase<R> {
         &self,
         source: UpsertMatchMessage,
     ) -> Result<(), MessageUseCaseError> {
+        let match_ = self
+            .repositories
+            .match_repository()
+            .find(Id::new(source.match_id.value.clone()))
+            .await
+            .map_err(|e| MessageUseCaseError::UnexpectedError(anyhow::anyhow!(e)))?
+            .ok_or(MessageUseCaseError::UnexpectedError(anyhow::anyhow!(
+                "match is not found"
+            )))?;
         let candidates = self
             .repositories
             .candidate_repository()
-            .select_by_match_id(Id::new(source.match_.id.value.clone()))
+            .select_by_match_id(Id::new(match_.id.value.clone()))
             .await
             .map_err(|e| MessageUseCaseError::UnexpectedError(anyhow::anyhow!(e)))?;
         let bets = self
             .repositories
             .bet_repository()
-            .select_by_match_id(Id::new(source.match_.id.value.clone()))
+            .select_by_match_id(Id::new(match_.id.value.clone()))
             .await
             .map_err(|e| MessageUseCaseError::UnexpectedError(anyhow::anyhow!(e)))?;
         let users = self
@@ -40,7 +49,7 @@ impl<R: RepositoriesModuleExt> MessageUseCase<R> {
 
         let content = format!(
             "### 「{}」が作成されました\n{}",
-            source.match_.title,
+            match_.title,
             statistics.iter().fold("".to_string(), |acc, statistic| {
                 format!(
                     "- {}\n{}: {}倍({}pt)\n  - {}\n",
@@ -63,7 +72,7 @@ impl<R: RepositoriesModuleExt> MessageUseCase<R> {
             })
         );
 
-        match source.match_.message_id {
+        match match_.message_id {
             Some(message_id) => {
                 self.repositories
                     .message_traq_repository()
@@ -79,11 +88,7 @@ impl<R: RepositoriesModuleExt> MessageUseCase<R> {
                 let message = self
                     .repositories
                     .message_traq_repository()
-                    .create(NewMessage::new(
-                        Id::new(source.channel_id.value.clone()),
-                        content,
-                        true,
-                    ))
+                    .create(NewMessage::new(source.channel_id, content, true))
                     .await
                     .map_err(|e| match e {
                         TraqRepositoryError::UnexpectedError(e) => {
@@ -92,7 +97,7 @@ impl<R: RepositoriesModuleExt> MessageUseCase<R> {
                     })?;
                 self.repositories
                     .match_repository()
-                    .update(UpdateMatch::new(source.match_.id, Some(Some(message.id))))
+                    .update(UpdateMatch::new(match_.id, Some(Some(message.id))))
                     .await
                     .map_err(|e| match e {
                         _ => MessageUseCaseError::UnexpectedError(anyhow::anyhow!(e)),

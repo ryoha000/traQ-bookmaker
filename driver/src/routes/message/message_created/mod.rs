@@ -175,7 +175,7 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                     .await?;
                 return Ok(());
             }
-            close::handle(modules, CloseArg::new(channel_id)).await?
+            close::handle(modules, CloseArg::new(channel_id, event.message.id)).await?
         }
         "bet" => {
             if is_help_command(&args) {

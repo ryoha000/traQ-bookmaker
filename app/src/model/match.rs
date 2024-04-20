@@ -24,6 +24,7 @@ impl From<CreateMatch> for NewMatch {
 #[derive(new)]
 pub struct CloseMatch {
     pub channel_id: String,
+    pub message_id: String,
 }
 
 impl From<CloseMatch> for UpdateMatchForLatest {

@@ -6,14 +6,13 @@ use kernel::model::candidate::NewCandidate;
 use kernel::model::channel::Channel;
 use kernel::model::message::NewMessage;
 use kernel::model::r#match::Match;
+use kernel::model::stamp::{NewStamp, StampType};
 use kernel::model::Id;
 use kernel::repository::error::RepositoryError;
 use kernel::repository::{candidate::CandidateRepository, r#match::MatchRepository};
-use kernel::traq::message::MessageTraqRepository;
+use kernel::traq::{message::MessageTraqRepository, stamp::StampTraqRepository};
 
 use crate::model::r#match::{CloseMatch, CreateMatch, FinishMatch};
-
-use super::escape_arg;
 
 #[derive(new)]
 pub struct MatchUseCase<R: RepositoriesModuleExt> {
@@ -68,27 +67,10 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
                 _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
             })?;
 
-        let channel_id = Id::new(match_.channel_id.value.clone());
-        self.repositories
-            .message_traq_repository()
-            .create(NewMessage::new(
-                channel_id,
-                format!(
-                    "### 「{}」が開始されました\n対象は{}です。\n`@BOT_bookmaker bet {} ポイント数`の形式で参加できます",
-                    match_.title,
-                    candidates_source.join(", "),
-                    escape_arg(&candidates_source[0]),
-                ),
-                true,
-            ))
-            .await
-            .map_err(|e| match e {
-                _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
-            })?;
-
         Ok(match_)
     }
     pub async fn close_match(&self, source: CloseMatch) -> Result<Match, MatchUseCaseError> {
+        let message_id = Id::new(source.message_id.clone());
         let match_ = self
             .repositories
             .match_repository()
@@ -99,17 +81,9 @@ impl<R: RepositoriesModuleExt> MatchUseCase<R> {
                 _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
             })?;
 
-        let channel_id = Id::new(match_.channel_id.value.clone());
         self.repositories
-            .message_traq_repository()
-            .create(NewMessage::new(
-                channel_id,
-                format!(
-                    "### 「{}」への bet を締め切りました\nレートは以下の通りです\nTODO: レートの表示",
-                    match_.title
-                ),
-                true,
-            ))
+            .stamp_repository()
+            .create(NewStamp::new(message_id, StampType::WhiteCheckMark))
             .await
             .map_err(|e| match e {
                 _ => MatchUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
