@@ -14,6 +14,7 @@ mod cancel;
 mod close;
 mod finish;
 mod help;
+mod info;
 mod reg;
 mod start;
 
@@ -237,7 +238,7 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                         Command::new(
                             "finish".to_string(),
                             "賭けの終了".to_string(),
-                            "賭けを終了しポイントを分配します\n既に勝者が決まっている賭けではエラーになります\n`@BOT_bookmaker finish 勝者名`の形式で指定できます"
+                            "賭けを終了しポイントを分配します\n既に勝者が決まっている賭けではエラーになります\n丸め処理を適当にやっているため前後で総ポイント数が増減する可能性があります\n`@BOT_bookmaker finish 勝者名`の形式で指定できます"
                                 .to_string(),
                             "@BOT_bookmaker finish 勝者名".to_string(),
                         ),
@@ -255,6 +256,25 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                 ),
             )
             .await?
+        }
+        "info" => {
+            if is_help_command(&args) {
+                modules
+                    .message_use_case()
+                    .send_help_message(SendHelpMessage::new(
+                        channel_id,
+                        Command::new(
+                            "info".to_string(),
+                            "ポイント情報".to_string(),
+                            "各ユーザーのポイントを表示します\n他のチャンネルでのポイントは全く別で管理されています"
+                                .to_string(),
+                            "@BOT_bookmaker info".to_string(),
+                        ),
+                    ))
+                    .await?;
+                return Ok(());
+            }
+            info::handle(modules, info::InfoArg::new(channel_id)).await?
         }
         _ => {
             return Err(anyhow::anyhow!("Unknown command: {}", command_name));

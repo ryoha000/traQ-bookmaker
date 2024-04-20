@@ -71,9 +71,12 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
             None => Ok(None),
         }
     }
-    async fn select_by_channel_id(&self, channel_id: String) -> Result<Vec<User>, RepositoryError> {
+    async fn select_by_channel_id(
+        &self,
+        channel_id: Id<String>,
+    ) -> Result<Vec<User>, RepositoryError> {
         let result = Entity::find()
-            .filter(Column::ChannelId.eq(channel_id))
+            .filter(Column::ChannelId.eq(channel_id.value))
             .all(&self.db.0)
             .await
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
