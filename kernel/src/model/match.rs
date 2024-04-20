@@ -27,3 +27,9 @@ pub struct UpdateMatchForLatest {
     pub closed_at: Option<Option<DateTimeUtc>>,
     pub winner_candidate_name: Option<Option<String>>,
 }
+
+#[derive(new, Debug)]
+pub struct UpdateMatch {
+    pub id: Id<Match>,
+    pub message_id: Option<Option<Id<Message>>>,
+}

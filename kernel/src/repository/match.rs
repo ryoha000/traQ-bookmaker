@@ -1,6 +1,6 @@
 use crate::model::{
     channel::Channel,
-    r#match::{Match, NewMatch, UpdateMatchForLatest},
+    r#match::{Match, NewMatch, UpdateMatch, UpdateMatchForLatest},
     Id,
 };
 
@@ -10,6 +10,10 @@ pub trait MatchRepository {
     fn insert(
         &self,
         m: NewMatch,
+    ) -> impl std::future::Future<Output = Result<Match, RepositoryError>> + Send;
+    fn update(
+        &self,
+        m: UpdateMatch,
     ) -> impl std::future::Future<Output = Result<Match, RepositoryError>> + Send;
     fn update_for_latest(
         &self,

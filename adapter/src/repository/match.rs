@@ -1,7 +1,7 @@
 use kernel::{
     model::{
         channel::Channel,
-        r#match::{Match, NewMatch, UpdateMatchForLatest},
+        r#match::{Match, NewMatch, UpdateMatch, UpdateMatchForLatest},
         Id,
     },
     repository::{error::RepositoryError, r#match::MatchRepository},
@@ -76,6 +76,42 @@ impl MatchRepository for DatabaseRepositoryImpl<Match> {
                         .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
 
                     result.try_into()
+                })
+            })
+            .await
+            .map_err(|e| match e {
+                TransactionError::Transaction(repo_err) => repo_err,
+                _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
+            })
+    }
+    async fn update(&self, m: UpdateMatch) -> Result<Match, RepositoryError> {
+        self.db
+            .0
+            .transaction::<_, Match, RepositoryError>(|txn| {
+                Box::pin(async move {
+                    let model = Entity::find()
+                        .filter(Column::Id.eq(&m.id.value.to_string()))
+                        .one(txn)
+                        .await
+                        .map_err(|e| match e {
+                            DbErr::RecordNotFound(str) => RepositoryError::RecordNotFound(str),
+                            _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
+                        })?;
+
+                    let model = model.ok_or(RepositoryError::RecordNotFound(
+                        "Match not found".to_string(),
+                    ))?;
+                    let mut match_ = model.into_active_model();
+
+                    if let Some(message_id) = m.message_id {
+                        match_.message_id = Set(message_id.map(|id| id.value));
+                    }
+                    match_
+                        .update(txn)
+                        .await
+                        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?
+                        .into_active_model()
+                        .try_into()
                 })
             })
             .await

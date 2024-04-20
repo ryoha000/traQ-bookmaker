@@ -1,6 +1,6 @@
 use kernel::{
     model::{
-        message::{Message, NewMessage},
+        message::{Message, NewMessage, UpdateMessage},
         Id,
     },
     traq::{error::TraqRepositoryError, message::MessageTraqRepository},
@@ -52,6 +52,31 @@ impl MessageTraqRepository for TraqRepositoryImpl {
             }
             code => Err(TraqRepositoryError::UnexpectedError(anyhow::anyhow!(
                 "Failed to create message: {}(status code: {})",
+                response.text().await.unwrap_or_default(),
+                code
+            ))),
+        }
+    }
+    async fn update(&self, message: UpdateMessage) -> Result<(), TraqRepositoryError> {
+        let request_body = MessageRequest {
+            content: message.content,
+            embed: message.embed,
+        };
+        let response = reqwest::Client::new()
+            .put(format!(
+                "https://q.trap.jp/api/v3/channels/messages/{}",
+                message.id.value
+            ))
+            .header("Authorization", format!("Bearer {}", self.access_token))
+            .json(&request_body)
+            .send()
+            .await
+            .map_err(|e| TraqRepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        match response.status() {
+            StatusCode::NO_CONTENT => Ok(()),
+            code => Err(TraqRepositoryError::UnexpectedError(anyhow::anyhow!(
+                "Failed to update message: {}(status code: {})",
                 response.text().await.unwrap_or_default(),
                 code
             ))),
