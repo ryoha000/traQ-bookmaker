@@ -1,6 +1,7 @@
 use kernel::{
     model::{
         bet::{Bet, NewBetForLatestMatch},
+        r#match::Match,
         Id,
     },
     repository::{bet::BetRepository, error::RepositoryError},
@@ -10,7 +11,7 @@ use sea_orm::{
     TransactionError, TransactionTrait, TryIntoModel,
 };
 
-use crate::model::bet::{ActiveModel, Model};
+use crate::model::bet::{ActiveModel, Column, Entity, Model};
 
 use super::DatabaseRepositoryImpl;
 
@@ -103,5 +104,14 @@ impl BetRepository for DatabaseRepositoryImpl<Bet> {
                 TransactionError::Transaction(repo_err) => repo_err,
                 _ => RepositoryError::UnexpectedError(anyhow::anyhow!(e)),
             })
+    }
+    async fn select_by_match_id(&self, match_id: Id<Match>) -> Result<Vec<Bet>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::MatchId.eq(match_id.value.to_string()))
+            .all(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        Ok(result.into_iter().map(|model| model.into()).collect())
     }
 }
