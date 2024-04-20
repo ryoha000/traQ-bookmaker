@@ -1,4 +1,5 @@
 pub mod help;
+pub mod r#match;
 
 use std::sync::Arc;
 

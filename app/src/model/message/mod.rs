@@ -1,4 +1,5 @@
 pub mod help;
+pub mod r#match;
 
 use derive_new::new;
 use kernel::model::{message::NewMessage, Id};
