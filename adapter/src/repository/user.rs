@@ -13,6 +13,18 @@ use crate::model::user::{ActiveModel, Column, Entity, Model};
 
 use super::DatabaseRepositoryImpl;
 
+impl From<Model> for User {
+    fn from(model: Model) -> Self {
+        User::new(
+            Id::new(model.id),
+            model.traq_id,
+            model.traq_display_id,
+            model.channel_id,
+            model.balance,
+        )
+    }
+}
+
 impl TryFrom<ActiveModel> for User {
     type Error = RepositoryError;
 
@@ -20,13 +32,7 @@ impl TryFrom<ActiveModel> for User {
         let model = c
             .try_into_model()
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
-        Ok(User::new(
-            Id::new(model.id),
-            model.traq_id,
-            model.traq_display_id,
-            model.channel_id,
-            model.balance,
-        ))
+        Ok(model.into())
     }
 }
 
@@ -63,5 +69,14 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
             Some(model) => Ok(Some(model.into_active_model().try_into()?)),
             None => Ok(None),
         }
+    }
+    async fn select_by_channel_id(&self, channel_id: String) -> Result<Vec<User>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::ChannelId.eq(channel_id))
+            .all(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        Ok(result.into_iter().map(|model| model.into()).collect())
     }
 }

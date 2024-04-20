@@ -11,4 +11,8 @@ pub trait UserRepository {
         &self,
         user: FindUser,
     ) -> impl std::future::Future<Output = Result<Option<User>, RepositoryError>> + Send;
+    fn select_by_channel_id(
+        &self,
+        channel_id: String,
+    ) -> impl std::future::Future<Output = Result<Vec<User>, RepositoryError>> + Send;
 }
