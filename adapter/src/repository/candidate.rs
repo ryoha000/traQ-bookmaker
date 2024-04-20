@@ -79,4 +79,16 @@ impl CandidateRepository for DatabaseRepositoryImpl<Candidate> {
             None => Ok(None),
         }
     }
+    async fn select_by_match_id(
+        &self,
+        match_id: Id<Match>,
+    ) -> Result<Vec<Candidate>, RepositoryError> {
+        let result = Entity::find()
+            .filter(Column::MatchId.eq(match_id.value))
+            .all(&self.db.0)
+            .await
+            .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        Ok(result.into_iter().map(|model| model.into()).collect())
+    }
 }

@@ -16,4 +16,8 @@ pub trait CandidateRepository {
         name: String,
         match_id: Id<Match>,
     ) -> impl std::future::Future<Output = Result<Option<Candidate>, RepositoryError>> + Send;
+    fn select_by_match_id(
+        &self,
+        match_id: Id<Match>,
+    ) -> impl std::future::Future<Output = Result<Vec<Candidate>, RepositoryError>> + Send;
 }
