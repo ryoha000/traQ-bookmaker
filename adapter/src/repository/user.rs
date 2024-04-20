@@ -1,13 +1,14 @@
 use kernel::{
     model::{
-        user::{self, FindUser, User},
+        user::{self, FindUser, UpdateBalance, User},
         Id,
     },
     repository::{error::RepositoryError, user::UserRepository},
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TryIntoModel,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set, TryIntoModel,
 };
+use sea_query::OnConflict;
 
 use crate::model::user::{ActiveModel, Column, Entity, Model};
 
@@ -39,7 +40,7 @@ impl TryFrom<ActiveModel> for User {
 impl UserRepository for DatabaseRepositoryImpl<user::User> {
     async fn insert(&self, user: user::NewUser) -> Result<User, RepositoryError> {
         let model = Model {
-            id: user.id.value.to_string(),
+            id: user.id.value,
             traq_id: user.traq_id,
             traq_display_id: user.traq_display_id,
             channel_id: user.channel_id,
@@ -78,5 +79,22 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
 
         Ok(result.into_iter().map(|model| model.into()).collect())
+    }
+    async fn update_balance(&self, users: Vec<UpdateBalance>) -> Result<(), RepositoryError> {
+        Entity::insert_many(users.into_iter().map(|u| ActiveModel {
+            id: Set(u.user_id.value),
+            balance: Set(u.balance),
+            ..Default::default()
+        }))
+        .on_conflict(
+            OnConflict::column(Column::Id)
+                .update_column(Column::Balance)
+                .to_owned(),
+        )
+        .exec(&self.db.0)
+        .await
+        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
+        Ok(())
     }
 }

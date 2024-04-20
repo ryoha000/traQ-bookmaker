@@ -1,4 +1,4 @@
-use crate::model::user::{FindUser, NewUser, User};
+use crate::model::user::{FindUser, NewUser, UpdateBalance, User};
 
 use super::error::RepositoryError;
 
@@ -15,4 +15,8 @@ pub trait UserRepository {
         &self,
         channel_id: String,
     ) -> impl std::future::Future<Output = Result<Vec<User>, RepositoryError>> + Send;
+    fn update_balance(
+        &self,
+        users: Vec<UpdateBalance>,
+    ) -> impl std::future::Future<Output = Result<(), RepositoryError>> + Send;
 }

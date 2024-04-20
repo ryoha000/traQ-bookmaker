@@ -25,3 +25,9 @@ pub struct FindUser {
     pub traq_id: String,
     pub channel_id: Id<Channel>,
 }
+
+#[derive(new, Debug)]
+pub struct UpdateBalance {
+    pub user_id: Id<User>,
+    pub balance: i32,
+}
