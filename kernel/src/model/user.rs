@@ -1,6 +1,6 @@
 use derive_new::new;
 
-use super::Id;
+use super::{channel::Channel, Id};
 
 #[derive(new, Debug)]
 pub struct User {
@@ -18,4 +18,10 @@ pub struct NewUser {
     pub traq_display_id: String,
     pub channel_id: String,
     pub balance: i32,
+}
+
+#[derive(new, Debug)]
+pub struct FindUser {
+    pub traq_id: String,
+    pub channel_id: Id<Channel>,
 }

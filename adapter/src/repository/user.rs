@@ -1,6 +1,6 @@
 use kernel::{
     model::{
-        user::{self, User},
+        user::{self, FindUser, User},
         Id,
     },
     repository::{error::RepositoryError, user::UserRepository},
@@ -48,9 +48,13 @@ impl UserRepository for DatabaseRepositoryImpl<user::User> {
 
         result.try_into()
     }
-    async fn find_by_traq_id(&self, traq_id: String) -> Result<Option<User>, RepositoryError> {
+    async fn find_by_traq_id_and_channel_id(
+        &self,
+        user: FindUser,
+    ) -> Result<Option<User>, RepositoryError> {
         let result = Entity::find()
-            .filter(Column::TraqId.eq(traq_id))
+            .filter(Column::TraqId.eq(user.traq_id))
+            .filter(Column::ChannelId.eq(user.channel_id.value.to_string()))
             .one(&self.db.0)
             .await
             .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
