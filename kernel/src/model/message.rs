@@ -14,3 +14,10 @@ pub struct NewMessage {
     pub content: String,
     pub embed: bool,
 }
+
+#[derive(new, Debug)]
+pub struct UpdateMessage {
+    pub id: Id<Message>,
+    pub content: String,
+    pub embed: bool,
+}
