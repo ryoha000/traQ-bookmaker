@@ -16,7 +16,10 @@ pub async fn handle(modules: Arc<Modules>, channel_id: String) -> anyhow::Result
                 ),
                 CommandSummary::new("start".to_string(), "賭けを開始します".to_string()),
                 CommandSummary::new("close".to_string(), "bet を締め切ります".to_string()),
-                CommandSummary::new("bet".to_string(), "あなたのポイントを賭けます".to_string()),
+                CommandSummary::new(
+                    "bet".to_string(),
+                    "あなたのポイントを賭けます。参加賞で1000ptもらえます".to_string(),
+                ),
                 CommandSummary::new("cancel".to_string(), "賭けをキャンセルします".to_string()),
                 CommandSummary::new(
                     "finish".to_string(),

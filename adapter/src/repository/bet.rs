@@ -7,8 +7,8 @@ use kernel::{
     repository::{bet::BetRepository, error::RepositoryError},
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder, SqlErr,
-    TransactionError, TransactionTrait, TryIntoModel,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder, Set,
+    SqlErr, TransactionError, TransactionTrait, TryIntoModel,
 };
 
 use crate::model::bet::{ActiveModel, Column, Entity, Model};
@@ -37,6 +37,8 @@ impl TryFrom<ActiveModel> for Bet {
         Ok(model.into())
     }
 }
+
+const PARTICIPATION_PRIZE_POINT: i32 = 1000;
 
 impl BetRepository for DatabaseRepositoryImpl<Bet> {
     async fn insert_for_latest_match(
@@ -78,9 +80,22 @@ impl BetRepository for DatabaseRepositoryImpl<Bet> {
                             "User not found".to_string(),
                         ))?;
 
+                    let user_id = user.id.clone();
+                    let user_balance = user.balance + PARTICIPATION_PRIZE_POINT - m.amount;
+                    // MEMO: これ usecase に移す
+                    if user_balance < 0 {
+                        return Err(RepositoryError::InsufficientBalance);
+                    }
+                    let mut user_model = user.into_active_model();
+                    user_model.balance = Set(user_balance);
+                    user_model
+                        .save(txn)
+                        .await
+                        .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e)))?;
+
                     let model = Model {
                         id: m.id.value.to_string(),
-                        user_id: user.id,
+                        user_id: user_id,
                         match_id: match_.id,
                         candidate_id: candidate.id,
                         amount: m.amount,

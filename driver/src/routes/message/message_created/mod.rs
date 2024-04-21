@@ -186,7 +186,7 @@ pub async fn handle(modules: Arc<Modules>, event: MessageCreatedEvent) -> anyhow
                         Command::new(
                             "bet".to_string(),
                             "賭け".to_string(),
-                            "賭けを行います\n賭けの対象となる候補を指定し、賭けるポイントは正の整数を指定してください\n`@BOT_bookmaker bet 候補A ポイント数`の形式で指定できます"
+                            "賭けを行います\n賭けの対象となる候補を指定し、賭けるポイントは正の整数を指定してください\n参加賞として1000ptもらえます\n`@BOT_bookmaker bet 候補A ポイント数`の形式で指定できます"
                                 .to_string(),
                             "@BOT_bookmaker bet 候補A 1000".to_string(),
                         ),

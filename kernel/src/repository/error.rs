@@ -6,6 +6,8 @@ pub enum RepositoryError {
     RecordNotFound(String),
     #[error("Duplicated record: {0}")]
     DuplicatedRecord(String),
+    #[error("Insufficient balance")]
+    InsufficientBalance,
     #[error("Unexpected error: {0}")]
     UnexpectedError(#[from] anyhow::Error),
 }

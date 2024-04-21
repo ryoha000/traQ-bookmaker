@@ -53,9 +53,9 @@ impl<R: RepositoriesModuleExt> BetUseCase<R> {
 
                 return Ok(bet);
             }
-            Err(e) => match e {
-                RepositoryError::RecordNotFound(s) => {
-                    let error_with_message = {
+            Err(e) => {
+                let error_with_message = match e {
+                    RepositoryError::RecordNotFound(s) => {
                         if s.contains("Match") {
                             (
                                 "有効な賭けが見つかりませんでした",
@@ -68,9 +68,9 @@ impl<R: RepositoriesModuleExt> BetUseCase<R> {
                             )
                         } else if s.contains("User") {
                             (
-                            "ユーザー登録していません\n`@BOT_bookmaker reg`で先に登録してください",
-                            BetUseCaseError::UserNotFound,
-                        )
+                                "ユーザー登録していません\n`@BOT_bookmaker reg`で先に登録してください",
+                                BetUseCaseError::UserNotFound,
+                            )
                         } else {
                             (
                                 "予期せぬエラーが発生しました",
@@ -79,25 +79,33 @@ impl<R: RepositoriesModuleExt> BetUseCase<R> {
                                 )),
                             )
                         }
-                    };
-                    self.repositories
-                        .message_traq_repository()
-                        .create(NewMessage::new(
-                            channel_id,
-                            error_with_message.0.to_string(),
-                            true,
-                        ))
-                        .await
-                        .map_err(|e| match e {
-                            _ => BetUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
-                        })?;
-                    return Err(error_with_message.1);
-                }
-                RepositoryError::DuplicatedRecord(_) => {
-                    return Err(BetUseCaseError::EnabledBetAlreadyExists)
-                }
-                _ => return Err(BetUseCaseError::UnexpectedError(anyhow::anyhow!(e))),
-            },
+                    }
+                    RepositoryError::DuplicatedRecord(_) => (
+                        "すでにこの賭けに参加しています",
+                        BetUseCaseError::EnabledBetAlreadyExists,
+                    ),
+                    RepositoryError::InsufficientBalance => (
+                        "ポイントが不足しています",
+                        BetUseCaseError::AmountMustBePositive,
+                    ),
+                    _ => (
+                        "予期せぬエラーが発生しました",
+                        BetUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+                    ),
+                };
+                self.repositories
+                    .message_traq_repository()
+                    .create(NewMessage::new(
+                        channel_id,
+                        error_with_message.0.to_string(),
+                        true,
+                    ))
+                    .await
+                    .map_err(|e| match e {
+                        _ => BetUseCaseError::UnexpectedError(anyhow::anyhow!(e)),
+                    })?;
+                return Err(error_with_message.1);
+            }
         }
     }
 }
