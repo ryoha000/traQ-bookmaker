@@ -16,11 +16,12 @@ impl Db {
         let username = must_get_env("NS_MARIADB_USERNAME");
         let password = must_get_env("NS_MARIADB_PASSWORD");
         let hostname = must_get_env("NS_MARIADB_HOSTNAME");
+        let port = must_get_env("NS_MARIADB_PORT");
         let database = must_get_env("NS_MARIADB_DATABASE");
 
         let mut opt = ConnectOptions::new(format!(
-            "mysql://{}:{}@{}/{}",
-            username, password, hostname, database
+            "mysql://{}:{}@{}:{}/{}",
+            username, password, hostname, port, database
         ));
         opt.max_connections(100)
             .min_connections(5)

@@ -26,19 +26,19 @@ tasks:
     cmds: 
       - sea-orm-cli migrate up -u {{.DATABASE_URL}}
     vars:
-      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}/{{.NS_MARIADB_DATABASE}}
+      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}:{{.NS_MARIADB_PORT}}/{{.NS_MARIADB_DATABASE}}
   migrate:down:
     cmds: 
       - sea-orm-cli migrate down -u {{.DATABASE_URL}}
     vars:
-      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}/{{.NS_MARIADB_DATABASE}}
+      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}:{{.NS_MARIADB_PORT}}/{{.NS_MARIADB_DATABASE}}
 
   ## generate code
   gen:entity:
     cmds: 
       - sea-orm-cli generate entity -u  {{.DATABASE_URL}} -o adapter/src/model
     vars:
-      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}/{{.NS_MARIADB_DATABASE}}
+      DATABASE_URL: mysql://{{.NS_MARIADB_USERNAME}}:{{.NS_MARIADB_PASSWORD}}@{{.NS_MARIADB_HOSTNAME}}:{{.NS_MARIADB_PORT}}/{{.NS_MARIADB_DATABASE}}
 
   dev:server:
     cmds: 
